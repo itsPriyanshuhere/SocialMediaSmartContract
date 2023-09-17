@@ -1,0 +1,197 @@
+# SocialMediaSmartContract
+
+
+pragma solidity ^0.8.0;
+
+contract TwitterLikeDApp {
+    struct User {
+        string username;
+        string profileData;
+        address userAddress;
+    }
+
+    uint constant = 3;
+
+    event NewLike(address indexed from, address indexed to, uint256 tweetId);
+    event NewRetweet(address indexed from, address indexed to, uint256 tweetId);
+    event Mention(address indexed from, address indexed to, uint256 tweetId);
+    event NewTweet(address indexed author, uint256 indexed tweetId, string content);
+    event Followed(address indexed follower, address indexed followedUser);
+    event Unfollowed(address indexed follower, address indexed unfollowedUser);
+    event newLike(address indexed follower, address indexed author, uint256 indexed tweetId);
+
+
+    mapping(address => User) public users;
+
+    function registerUser(string memory _username, string memory _profileData) public {
+        require(users[msg.sender].userAddress == address(0), "User already registered");
+        users[msg.sender] = User(_username, _profileData, msg.sender);
+    }
+
+        struct Tweet {
+        uint256 tweetId;
+        string content;
+        address author;
+        uint256 likes;
+        uint256 retweets;
+    }
+
+    //tweetId: would be the tweetLength+3;
+
+    mapping(address => Tweet[]) public userTweets;
+
+    function postTweet(string memory _content) public {
+        require(bytes(_content).length > 0, "Tweet content cannot be empty");
+        Tweet memory newTweet = Tweet(userTweets[msg.sender].length+3, _content, msg.sender, 0, 0);
+        userTweets[msg.sender].push(newTweet);
+    }
+
+    mapping(address => address[]) public userFollowers;
+    mapping(address => address[]) public userFollowing;
+
+    function followUser(address _followedUser) public {
+        userFollowing[msg.sender].push(_followedUser);
+        userFollowers[_followedUser].push(msg.sender);
+    }
+
+    function unfollowUser(address _unfollowedUser) public {
+
+    require(userFollowing[msg.sender].length > 0, "You are not following anyone");
+    require(users[_unfollowedUser].userAddress != address(0), "User not found");
+
+    // Remove _unfollowedUser from the list of users followed by msg.sender
+
+    uint i = 0;
+    while (i < userFollowing[msg.sender].length) {
+        if (userFollowing[msg.sender][i] == _unfollowedUser) {
+            userFollowing[msg.sender][i] = userFollowing[msg.sender][userFollowing[msg.sender].length - 1];
+            userFollowing[msg.sender].pop();
+            break;
+        }
+        i++;
+    }
+
+    // Remove msg.sender from the list of followers of _unfollowedUser
+
+    i = 0;
+    while (i < userFollowers[_unfollowedUser].length) {
+        if (userFollowers[_unfollowedUser][i] == msg.sender) {
+            userFollowers[_unfollowedUser][i] = userFollowers[_unfollowedUser][userFollowers[_unfollowedUser].length - 1];
+            userFollowers[_unfollowedUser].pop();
+            break;
+        }
+        i++;
+    }
+
+    emit Unfollowed(msg.sender, _unfollowedUser);
+}
+
+    mapping(address => mapping(uint256 => bool)) public userRetweets;
+
+    function likeTweet(address _tweetAuthor, uint256 _tweetId) public {
+    require(_tweetId < userTweets[_tweetAuthor].length, "Tweet does not exist");
+
+    Tweet storage tweet = userTweets[_tweetAuthor][_tweetId];
+    require(tweet.author != address(0), "Tweet does not exist");
+
+    // Check if msg.sender has not already liked the tweet
+    bool hasLiked = false;
+    for (uint i = 0; i < tweet.likes; i++) {
+        if (tweet.likes == msg.sender) {
+            hasLiked = true;
+            break;
+        }
+    }
+
+    require(!hasLiked, "You have already liked this tweet");
+
+    // Record the like
+    tweet.likes++;
+
+    // Emit the NewLike event
+    emit NewLike(msg.sender, _tweetAuthor, _tweetId);
+    }
+
+    -------------------------------------------------------------------FUNCTIONALITIES DONE TILL HERE: CHECK REQUIRED[]------------------------------------------------------------------------
+
+
+    function retweet(address _tweetAuthor, uint256 _tweetId) public {
+        // Implement logic to record retweets.
+    }
+
+    function disLikeTweet(address _tweetAuthor, uint256 _tweetId) public {
+        // Implement logic to record likes and emit NewLike event.
+        emit NewLike(msg.sender, _tweetAuthor, _tweetId);
+    }
+
+    // Implement similar functions for retweets and mentions.
+
+    //Premium content transactions
+
+        mapping(address => uint256) public userBalance;
+
+    function tipUser(address _recipient, uint256 _amount) public {
+        require(_amount > 0, "Amount must be greater than zero");
+        require(userBalance[msg.sender] >= _amount, "Insufficient balance");
+        
+        userBalance[msg.sender] -= _amount;
+        userBalance[_recipient] += _amount;
+    }
+
+    // Implement a function to withdraw funds from the contract to the user's wallet.
+    function withdrawFunds(uint256 _amount) public {
+        require(userBalance[msg.sender] >= _amount, "Insufficient balance");
+        
+        userBalance[msg.sender] -= _amount;
+        payable(msg.sender).transfer(_amount);
+    }
+
+        mapping(uint256 => bool) public flaggedTweets;
+
+    function flagTweet(uint256 _tweetId) public {
+        flaggedTweets[_tweetId] = true;
+    }
+
+    // Implement a function to review flagged tweets and take appropriate actions.
+
+    mapping(address => mapping(address => bool)) public delegatedPermissions;
+
+    modifier hasPermission(address _delegate, string memory _permission) {
+        require(delegatedPermissions[msg.sender][_delegate], "Permission denied");
+        _;
+    }
+
+    function grantPermission(address _delegate, string memory _permission) public {
+        delegatedPermissions[msg.sender][_delegate] = true;
+    }
+
+    // Implement functions for revoking permissions and checking permissions before actions.
+
+        function getTweetAnalytics(address _user) public view returns (uint256 totalTweets, uint256 totalLikes, uint256 totalRetweets) {
+        Tweet[] storage tweets = userTweets[_user];
+        for (uint256 i = 0; i < tweets.length; i++) {
+            totalTweets++;
+            totalLikes += tweets[i].likes;
+            totalRetweets += tweets[i].retweets;
+        }
+    }
+
+        struct Content {
+        string contentHash; // IPFS or other content address
+        uint256 timestamp;
+        address owner;
+    }
+
+    mapping(uint256 => Content) public contentMap;
+    uint256 public contentCounter = 0;
+
+    function storeContent(string memory _contentHash) public {
+        contentMap[contentCounter] = Content(_contentHash, block.timestamp, msg.sender);
+        contentCounter++;
+    }
+
+   // block or unblock user
+   // nft profile picture
+   // koi bhi buy kar sakta uska certain fraction mil jayega uska
+
+}
