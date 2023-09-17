@@ -128,7 +128,9 @@ contract TwitterLikeDApp {
 
     //Premium content transactions
 
-        mapping(address => uint256) public userBalance;
+    mapping(address => uint256) public userBalance;
+
+    /////////////////PAYING USER PROFILE IF SOMEONE LIKES THEM///////////////////
 
     function tipUser(address _recipient, uint256 _amount) public {
         require(_amount > 0, "Amount must be greater than zero");
@@ -146,24 +148,17 @@ contract TwitterLikeDApp {
         payable(msg.sender).transfer(_amount);
     }
 
-        mapping(uint256 => bool) public flaggedTweets;
+      /////////////////PAYING USER PROFILE IF SOMEONE LIKES THEM///////////////////
+
+----------------FLAGGING TWEETS
+
+    mapping(uint256 => bool) public flaggedTweets;
 
     function flagTweet(uint256 _tweetId) public {
         flaggedTweets[_tweetId] = true;
     }
 
     // Implement a function to review flagged tweets and take appropriate actions.
-
-    mapping(address => mapping(address => bool)) public delegatedPermissions;
-
-    modifier hasPermission(address _delegate, string memory _permission) {
-        require(delegatedPermissions[msg.sender][_delegate], "Permission denied");
-        _;
-    }
-
-    function grantPermission(address _delegate, string memory _permission) public {
-        delegatedPermissions[msg.sender][_delegate] = true;
-    }
 
     // Implement functions for revoking permissions and checking permissions before actions.
 
@@ -175,6 +170,8 @@ contract TwitterLikeDApp {
             totalRetweets += tweets[i].retweets;
         }
     }
+
+    /////FOR ADMIN TO PUSH OUT ANY CONTENT OR UPDATES OR WE CAN POST ADS THROUGH THIS
 
         struct Content {
         string contentHash; // IPFS or other content address
@@ -190,7 +187,7 @@ contract TwitterLikeDApp {
         contentCounter++;
     }
 
-   // block or unblock user
+==========================REMAINING FEATURES==============================================================
    // nft profile picture
    // koi bhi buy kar sakta uska certain fraction mil jayega uska
 
