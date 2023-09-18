@@ -10,6 +10,8 @@ contract TwitterLikeDApp {
 
     // uint constant = 3;
 
+    //eventList
+
     event NewLike(address indexed from, address indexed to, uint256 tweetId);
     event NewRetweet(address indexed from, address indexed to, uint256 tweetId);
     event Mention(address indexed from, address indexed to, uint256 tweetId);
@@ -19,7 +21,7 @@ contract TwitterLikeDApp {
     event TipSent(address indexed sender, address indexed recipient, uint256 amount);
 
 
-
+    //mapping for users
     mapping(address => User) public users;
 
     function registerUser(string memory _username, string memory _profileData) public {
@@ -33,6 +35,7 @@ contract TwitterLikeDApp {
         address author;
         uint256 likes;
         uint256 retweets;
+        string uri;// addition
     }
 
     function updateUser(string memory newName,string memory profileData) public{
@@ -45,9 +48,9 @@ contract TwitterLikeDApp {
 
     mapping(address => Tweet[]) public userTweets;
 
-    function postTweet(string memory _content) public {
+    function postTweet(string memory _content, string memory _uri) public {
         require(bytes(_content).length > 0, "Tweet content cannot be empty");
-        Tweet memory newTweet = Tweet(userTweets[msg.sender].length+3, _content, msg.sender, 0, 0);
+        Tweet memory newTweet = Tweet(userTweets[msg.sender].length+3, _content, msg.sender, 0, 0,_uri);
         userTweets[msg.sender].push(newTweet);
     }
 
